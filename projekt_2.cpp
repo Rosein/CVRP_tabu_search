@@ -24,7 +24,7 @@ void distance_for_two_cities_with_coordinates_from_pythagorean_triangle(){
     const Coordinate Bialystok{4, 0};
     assert(distance_between_cities(Krakow,Bialystok) == 5);
 }
-// sprawdzenie czy licza nalezy do zakresu (bo double nie sa dokładne wiec trzeba zakres)
+// sprawdzenie czy liczba nalezy do zakresu (bo double nie sa dokładne wiec trzeba zakres)
 bool is_near_enough_to(double supect, double center, double measurement_error = 0.000001){
     return supect >= center - measurement_error && supect <= center + measurement_error;
 }
