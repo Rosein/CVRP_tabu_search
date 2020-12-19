@@ -1,0 +1,18 @@
+DlaDariiJakUruchomicProjekt - po raz pierwszy!
+
+1. Upewnić się, że jestem w katalogu: /mnt/c/Users/Daria/Desktop/Metody_Projekt_2
+2. Usuwamy katalog o nazwie 'build': rm -rf build
+3. Tworzymy katalog o nazwie 'build': mkdir build 
+4. Potem idziemy do niego: cd build
+5. Generujemy cmake'iem pliki niezbędne do zbudowania projektu: cmake ..
+6. Budujemy projekt: cmake --build . --parallel 4 --config Release
+7. Uruchomienie aplikacji: ./VRP
+
+W skrócie:
+cd /mnt/c/Users/Daria/Desktop/Metody_Projekt_2
+rm -rf build # O ILE W OGOLE JEST CO USUWAC!
+mkdir build && cd build && cmake .. && cmake --bulid. --parallel 4 --conig Release && ./VRP
+
+DlaDariiJakUruchomicProjekt - po raz kolejny po pierwszym zbudowaniu
+
+
