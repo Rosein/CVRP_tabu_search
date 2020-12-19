@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iomanip>
 //potrzeba dokładnych danych
-
+const double geo_degree_in_km = 111.1; 
 
 //typ dla miasta szerokosc/długosc geo
 struct Coordinate{
@@ -12,8 +12,9 @@ struct Coordinate{
     double width;
 };
 
-//funkcja do obliczania odległosci dla miast
+std::vector<std::string> name_of_cities { "Krakow", "Bialystok", "Bie-Biala", "Chrzanow", "Gdansk", "Gdynia", "Gliwice", "Gromnik", "Katowice", "Kielce", "Krosno", "Krynica", "Lublin", "Lodz", "Malbork", "Nowy Targ", "Olsztyn", "Poznan", "Pulawy", "Radom", "Rzeszow", "Sandomierz", "Szczecin", "Szczucin", "Szk Poreba", "Tarnow", "Warszawa", "Wieliczka", "Wroclaw", "Zakopane", "Zamosc" };
 
+//funkcja do obliczania odległosci dla miast
 double distance_between_cities(Coordinate first_city, Coordinate second_city){
     return sqrt(pow(first_city.length - second_city.length, 2) + pow(first_city.width- second_city.width, 2));
 }
@@ -100,12 +101,18 @@ void make_real_distance_matrix(){
         {49.2969446, 19.950659},
         {50.7170854, 23.2525711}
     }; 
+    const int length_patter = 11;
+    for( int i = 0; i < cities.size(); i++ )
+    {
+        std::cout << std::setw(length_patter) << name_of_cities[ i ] << " ";
+    }
+    std::cout << std::endl;
 
     for( int i = 0; i < cities.size(); i++ )
     {
         for( int j = 0; j < cities.size(); j++ )
-            std::cout << std::setw(9) << distance_between_cities( cities[ i ], cities[ j ] ) << " ";
-    std::cout << std::endl;
+            std::cout << std::setw(length_patter) << geo_degree_in_km * distance_between_cities( cities[ i ], cities[ j ] ) << " ";
+        std::cout << std::endl;
     }
 
 }
