@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.14)
-project(VRP_tabu_search)
+project(CVRP_tabu_search)
 
-add_executable(VRP projekt_2.cpp)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-include(CPM.cmake)
+add_executable(CVRP cvrp_tabu_search.cpp)
+
+include(cmake/CPM.cmake)
 
 CPMAddPackage(
     NAME matplotplusplus
@@ -11,4 +14,4 @@ CPMAddPackage(
     GIT_TAG origin/master # or whatever tag you want
 )
 
-target_link_libraries(VRP PUBLIC matplot)
+target_link_libraries(CVRP PUBLIC matplot)

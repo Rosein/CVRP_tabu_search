@@ -6,12 +6,12 @@ DlaDariiJakUruchomicProjekt - po raz pierwszy!
 4. Potem idziemy do niego: cd build
 5. Generujemy cmake'iem pliki niezbędne do zbudowania projektu: cmake ..
 6. Budujemy projekt: cmake --build . --parallel 4 --config Release
-7. Uruchomienie aplikacji: ./VRP
+7. Uruchomienie aplikacji: ./CVRP
 
 W skrócie:
 cd /mnt/c/Users/Daria/Desktop/Metody_Projekt_2
 rm -rf build # O ILE W OGOLE JEST CO USUWAC!
-mkdir build && cd build && cmake .. && cmake --bulid. --parallel 4 --conig Release && ./VRP
+mkdir build && cd build && cmake .. && cmake --bulid . --parallel 4 --config Release && ./CVRP
 
 DlaDariiJakUruchomicProjekt - po raz kolejny po pierwszym zbudowaniu
 
