@@ -1,17 +1,17 @@
 #include "cvrp_tabu_search.hpp"
 
 //funkcja do obliczania odległosci dla miast
-double distance_between_cities( City& first_city, City& second_city){
+double distance_between_cities( City& first_city, City& second_city ){
     return geo_degree_in_km * ( sqrt( pow(first_city.m_coordinate.length - second_city.m_coordinate.length, 2) +
                                       pow(first_city.m_coordinate.width  - second_city.m_coordinate.width,  2)  ) );
 }
 
-// sprawdzenie czy liczba nalezy do zakresu (bo double nie sa dokładne wiec trzeba zakres)
-bool is_near_enough_to(double suspect, double center, double measurement_error ){
+//sprawdzenie czy liczba nalezy do zakresu (bo double nie sa dokładne wiec trzeba zakres)
+bool is_near_enough_to( double suspect, double center, double measurement_error ){
     return suspect >= center - measurement_error && suspect <= center + measurement_error;
 }
 
-void display(Route route){
+void display( Route route ){
     const int word_width = 10;
     std::cout << "{ " << std::setw( 7 ) <<  TSP::fitness(route) << " }";
     for (int i = 0; i < route.size(); i++){
@@ -20,7 +20,7 @@ void display(Route route){
     std::cout << std::endl;
 }
 
-void display(Routes routes)
+void display( Routes routes )
 {
     int sum = 0;
     for( int i = 0; i < routes.size(); ++i )
@@ -32,7 +32,7 @@ void display(Routes routes)
     std::cout << "Total distance: " << sum << '\t' << CVRP::counter << std::endl;
 }
 
-void draw_solution(Routes solution, int color)
+void draw_solution( Routes solution, int color )
 {
     using namespace matplot;
     for( auto& route : solution )
@@ -56,7 +56,6 @@ void draw_solution(Routes solution, int color)
     show();
 }
 
-
 void swap_cities( City& first, City& second ){
     City temp = first;
     first = second;
@@ -66,8 +65,8 @@ void swap_cities( City& first, City& second ){
 bool are_route_equal( Route first_route, Route second_route ){
     if( first_route.size() != second_route.size() )
         return false;
-    for (int i=0; i < first_route.size(); i++){
-        if(first_route[i].m_name != second_route[i].m_name){
+    for( int i = 0; i < first_route.size(); i++ ){
+        if(first_route[ i ].m_name != second_route[ i ].m_name){
             return false;
         }
     }
@@ -77,7 +76,7 @@ bool are_route_equal( Route first_route, Route second_route ){
 bool are_routes_equal( Routes first_routes, Routes second_routes ){
     if( first_routes.size() != second_routes.size() )
         return false;
-    for (int i=0; i < first_routes.size(); i++){
+    for( int i = 0; i < first_routes.size(); i++ ){
         if( are_route_equal( first_routes[ i ], second_routes[ i ] ) )
             return false;
     }
@@ -174,7 +173,7 @@ bool stopping_condition( Route& sBest, Route& prevSBest, int threshold ){
 
 bool is_in_tabu_list(Route route){
     for(int i=0; i < tsp_tabu_list.size(); i++){
-        if(are_route_equal(tsp_tabu_list[i], route)){
+        if( are_route_equal(tsp_tabu_list[i], route ) ){
             return true;
         }
     }
@@ -201,7 +200,6 @@ Route tabu_search( Route s0 ){
             remove_first_route_from_tabu_list();
         }
     }
-    // display(sBest);
 
     return sBest;
 }
@@ -217,7 +215,7 @@ std::pair<Route_City, Route_City> generate_routes_with_swapped_cities(Routes rou
 
     int first_route = std::rand() % ( routes.size() );
     int second_route = std::rand() % ( routes.size() );
-    while(first_route == second_route){
+    while( first_route == second_route ){
         second_route = std::rand() % ( routes.size() );
     }
 
@@ -230,7 +228,7 @@ std::pair<Route_City, Route_City> generate_routes_with_swapped_cities(Routes rou
     return { { first_route, first_city }, { second_route, second_city} };
 }
 
-Routes create_neighbor(Routes routes){
+Routes create_neighbor( Routes routes ){
     Routes new_route(routes);
     std::pair<Route_City,Route_City> cities_to_swap = generate_routes_with_swapped_cities(routes);
     swap_cities(new_route[ cities_to_swap.first.first  ] [ cities_to_swap.first.second ], 
@@ -238,8 +236,7 @@ Routes create_neighbor(Routes routes){
     return new_route;
 }
 
-
-bool is_already_in_neighbor(std::vector<Routes> neighbors, Routes candi ){
+bool is_already_in_neighbor( std::vector<Routes> neighbors, Routes candi ){
     for(int i=0; i< neighbors.size(); i++){
         if( are_routes_equal(neighbors[i], candi) )
             return true;
@@ -266,7 +263,7 @@ bool is_enough_space_in_vehicles( Routes routes )
     return true;
 }
 
-std::vector<Routes> get_neighbors(Routes routes){
+std::vector<Routes> get_neighbors( Routes routes ){
 
     std::vector<Routes> neighbors;
     int number_actually_needed_neighbors =  NUMBER_OF_NEIGHBORS;
@@ -284,8 +281,6 @@ std::vector<Routes> get_neighbors(Routes routes){
         else
             --i;
     }
-
-
     return neighbors;
 }
 
@@ -297,6 +292,7 @@ void remove_first_routes_from_tabu_list(){
 
 Routes build_init_solution()
 {
+    CVRP::counter = 0;
     Routes solution( numb_of_vehicles, Route(1, cities[0]) );
     for( auto& route : solution)
     {
@@ -329,16 +325,10 @@ Routes build_init_solution()
     for( auto& route : solution)
         route.push_back( cities[0] );
 
-    // for( auto& route : solution)
-    // {
-    //     for( auto& city : route )
-    //         std::cout << city.m_name << " ";
-    //     std::cout << std::endl;
-    // }
     return solution;
 }
 
-bool is_in_tabu_list(Routes routes){
+bool is_in_tabu_list( Routes routes ){
     for(int i=0; i < cvrp_tabu_list.size(); i++){
         if(are_routes_equal(cvrp_tabu_list[i], routes)){
             return true;
@@ -347,13 +337,12 @@ bool is_in_tabu_list(Routes routes){
     return false;
 }
 
-Routes find_best_candidate(std::vector<Routes> neighbors){
+Routes find_best_candidate( std::vector<Routes> neighbors ){
 
     Routes best_candidate = neighbors[0];
 
     for (int i = 0; i < neighbors.size(); i++){
-        // display(neighbors[i]);
-        if( !is_in_tabu_list(neighbors[i]) && fitness(neighbors[i]) <= fitness(best_candidate) ){
+        if( !is_in_tabu_list( neighbors[i] ) && fitness( neighbors[i] ) <= fitness( best_candidate ) ){
             best_candidate = neighbors[i];
         }
     }
@@ -368,6 +357,7 @@ double fitness(Routes routes){
 }
 
 bool stopping_condition( Routes& sBest, Routes& prevSBest, int threshold ){
+    display(sBest);
     if( is_near_enough_to(fitness(sBest), fitness(prevSBest), 1 ) )
         counter++;
     else
@@ -387,30 +377,36 @@ Routes tabu_search( Routes s0 ){
     cvrp_tabu_list.push_back(s0);
     Routes prevSBest{ sBest };
 
-    while( stopping_condition( sBest, prevSBest, 100000 ) ){
+    while( stopping_condition( sBest, prevSBest, 50000 ) ){
         std::vector<Routes> neighbors = get_neighbors(bestCandidate);
         bestCandidate = find_best_candidate(neighbors);
 
-        if(fitness(bestCandidate) < fitness(sBest)){
+        if( fitness(bestCandidate) < fitness(sBest) ){
             sBest = bestCandidate;
         }
-        cvrp_tabu_list.push_back(bestCandidate);
+        cvrp_tabu_list.push_back( bestCandidate );
 
-        if(cvrp_tabu_list.size() > max_tabu_size){
+        if( cvrp_tabu_list.size() > max_tabu_size ){
             remove_first_routes_from_tabu_list();
         }
-        display(sBest);
     }
     return sBest;
 }
+
 };
 
-
 // ========================================= MAIN ==================================
-int main() {
+int main() 
+{
     std::srand(time(0));
     auto solution = CVRP::build_init_solution();
+
+    auto start = std::chrono::high_resolution_clock::now(); 
     solution = CVRP::tabu_search( solution );
+    auto stop = std::chrono::high_resolution_clock::now(); 
+  
+    std::cout << "Time taken by cvrp_tabu_search: "
+         << std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() << " microseconds" << std::endl; 
 
     for( auto& route : solution )
     {
@@ -418,6 +414,7 @@ int main() {
         route = TSP::tabu_search( route );
     }
 
+    display( solution );
     draw_solution( solution, 25 );
     return 0;
 }
