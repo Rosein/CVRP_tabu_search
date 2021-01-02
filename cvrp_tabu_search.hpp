@@ -15,13 +15,12 @@
 #include <chrono>
 #include <thread>
 
-#define NUMBER_OF_NEIGHBORS 10
-
+#define NUMBER_OF_NEIGHBORS 20
 //potrzeba dokładnych danych
 const double geo_degree_in_km = 111.1; 
 const int numb_of_vehicles = 5;
 const int max_vehicle_capacity = 1000;
-const int max_tabu_size = 25;
+const int max_tabu_size = 10;
 //typ dla miasta szerokosc/długosc geo
 struct Coordinate{
     double width;
@@ -36,10 +35,19 @@ struct City{
 };
 
 using Route = std::vector<City>;
-using Tabu = std::vector<Route>;
+using Routes = std::vector<Route>;
+namespace TSP{
+    using Tabu = Routes;
+    int counter{0};
+};
+namespace CVRP{
+    using Tabu = std::vector<Routes>;
+    using Route_City = std::pair<int,int>;
+    int counter{0};
+};
 
-Tabu tabu_list {};
-int counter{0};
+TSP::Tabu tsp_tabu_list {};
+CVRP::Tabu cvrp_tabu_list {};
 
 std::vector<City> cities = {
     { {50.0619474, 19.9368564}, "Krakow", 0, std::make_shared<int>(0) },
@@ -76,19 +84,33 @@ std::vector<City> cities = {
 };
 
 double distance_between_cities( City& first_city, City& second_city);
-bool is_near_enough_to(double supect, double center, double measurement_error = 0.000001);
+bool is_near_enough_to(double suspect, double center, double measurement_error = 0.000001);
 void distance_for_two_cities();
-std::vector<Route> build_init_solution();
-void draw_solution(std::vector<Route> solution);
+void draw_solution(Routes solution);
 void display(Route route);
-
-std::pair<int,int> generate_cities_to_swap(Route route);
-void swap_cities(City& first, City& second);
-Route createNeighbor(Route route);
 bool are_route_equal(Route first_route, Route second_route);
-bool is_already_in_neighbor(std::vector<Route> neighbors, Route candi );
-std::vector<Route> getNeighbors(Route route);
-bool is_in_tabu_list(Route route);
-double fitness(Route route);
+void swap_cities(City& first, City& second);
 
+namespace CVRP{
+    Routes build_init_solution();
+    Routes tabu_search( Routes s0 );
+    double fitness(Routes routes);
+    Routes find_best_candidate(std::vector<Routes> neighbors);
+    bool is_in_tabu_list(Routes routes);
+    void remove_first_routes_from_tabu_list();
+    std::pair<Route_City, Route_City> generate_routes_with_swapped_cities(Routes routes);
+};
+
+namespace TSP{
+    std::pair<int,int> generate_cities_to_swap(Route route);
+    Route create_neighbor(Route route);
+    Routes get_neighbors(Route route);
+    Route find_best_candidate(Routes neighbors);
+    double fitness(Route route);
+    void remove_first_route_from_tabu_list();
+    bool is_already_in_neighbor(Routes neighbors, Route candi );
+    bool is_in_tabu_list(Route route);
+    bool stopping_condition( Route& sBest, Route& prevSBest, int threshold );
+    Route tabu_search( Route s0 );
+};
 #endif //CVRP_TABU_SEARCH_GUARD
