@@ -1,5 +1,6 @@
 DlaDariiJakUruchomicProjekt - po raz pierwszy!
 
+0. Włączyć XMingServer z paska 
 1. Upewnić się, że jestem w katalogu: /mnt/c/Users/Daria/Desktop/Metody_Projekt_2
 2. Usuwamy katalog o nazwie 'build': rm -rf build
 3. Tworzymy katalog o nazwie 'build': mkdir build
@@ -11,8 +12,9 @@ DlaDariiJakUruchomicProjekt - po raz pierwszy!
 W skrócie:
 cd /mnt/c/Users/Daria/Desktop/Metody_Projekt_2
 rm -rf build # O ILE W OGOLE JEST CO USUWAC!
-mkdir build && cd build && cmake .. && cmake --bulid . --parallel 4 && ./CVRP
-mkdir build && cd build && cmake .. && cmake --bulid . --parallel 8 && ./CVRP
+mkdir build && cd build && cmake .. && export QT_DEBUG_PLUGINS=1 && cmake --build . --parallel 4 && ./CVRP
+mkdir build && cd build && cmake .. && cmake --build . --parallel 4 && ./CVRP
+mkdir build && cd build && cmake .. && cmake --build . --parallel 8 && ./CVRP
 
 DlaDariiJakUruchomicProjekt - po raz kolejny po pierwszym zbudowaniu
 

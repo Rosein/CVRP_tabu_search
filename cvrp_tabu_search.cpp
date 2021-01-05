@@ -32,7 +32,7 @@ void display( Routes routes )
     std::cout << "Total distance: " << sum << '\t' << CVRP::counter << std::endl;
 }
 
-void draw_solution( Routes solution, int color )
+void draw_solution( Routes solution, int color ) // rysowanie rozwiazania, przy uzyciu matplot++
 {
     using namespace matplot;
     for( auto& route : solution )
@@ -48,21 +48,21 @@ void draw_solution( Routes solution, int color )
             tag.push_back( city.m_name );
         }
 
-        std::vector<double> cols (route.size(), color);
+        std::vector<double> cols (route.size(), color); // określa kolor dróg 
         color += 25;
-        geoplot(y,x)->marker("o").marker_colors(cols);
+        geoplot(y,x)->marker("o").marker_colors(cols); // wstawia punkt wezła i zonacza punkt kolorem
         text(x,y,tag);
     }
     show();
 }
 
-void swap_cities( City& first, City& second ){
+void swap_cities( City& first, City& second ){ // funkcja zamieniajaca miasta
     City temp = first;
     first = second;
     second = temp;
 }
 
-bool are_route_equal( Route first_route, Route second_route ){
+bool are_route_equal( Route first_route, Route second_route ){ // porowanie trasy
     if( first_route.size() != second_route.size() )
         return false;
     for( int i = 0; i < first_route.size(); i++ ){
@@ -73,7 +73,7 @@ bool are_route_equal( Route first_route, Route second_route ){
     return true;
 }
 
-bool are_routes_equal( Routes first_routes, Routes second_routes ){
+bool are_routes_equal( Routes first_routes, Routes second_routes ){ //porowanie zbioru tras
     if( first_routes.size() != second_routes.size() )
         return false;
     for( int i = 0; i < first_routes.size(); i++ ){
@@ -132,7 +132,7 @@ Routes get_neighbors(Route route){
     return neighbors;
 }
 
-double fitness(Route route){
+double fitness(Route route){ //funkcja liczy dystans z pojedynczej trasy pojedynczego samochodu
     double route_length = 0;
     for (int i = 0; i < route.size() - 1; i++)
         route_length += distance_between_cities( route[i], route[i + 1] );
@@ -187,7 +187,7 @@ Route tabu_search( Route s0 ){
     tsp_tabu_list.push_back(s0);
     Route prevSBest{ sBest };
 
-    while( stopping_condition( sBest, prevSBest, 10000 ) ){
+    while( stopping_condition( sBest, prevSBest, tsp_max_same_iterations_result ) ){
         Routes neighbors = get_neighbors(bestCandidate);
         bestCandidate = find_best_candidate(neighbors);
 
@@ -208,7 +208,7 @@ Route tabu_search( Route s0 ){
 
 namespace CVRP {
 
-std::pair<Route_City, Route_City> generate_routes_with_swapped_cities(Routes routes){
+std::pair<Route_City, Route_City> generate_indexes_for_city_swapping(Routes routes){
 
     if( routes.size() == 1 )
         throw std::logic_error( "Too few routes." );
@@ -228,11 +228,11 @@ std::pair<Route_City, Route_City> generate_routes_with_swapped_cities(Routes rou
     return { { first_route, first_city }, { second_route, second_city} };
 }
 
-Routes create_neighbor( Routes routes ){
-    Routes new_route(routes);
-    std::pair<Route_City,Route_City> cities_to_swap = generate_routes_with_swapped_cities(routes);
+Routes create_neighbor( Routes routes ){ // funkcja tworzy nowego sąsiada
+    Routes new_route(routes); //kopiuje na początku wszystkie trasy
+    std::pair<Route_City,Route_City> cities_to_swap = generate_indexes_for_city_swapping(routes);
     swap_cities(new_route[ cities_to_swap.first.first  ] [ cities_to_swap.first.second ], 
-                new_route[ cities_to_swap.second.first ] [ cities_to_swap.second.second ] );
+                new_route[ cities_to_swap.second.first ] [ cities_to_swap.second.second ] ); // w nowej drodze zamienia miasta
     return new_route;
 }
 
@@ -244,16 +244,17 @@ bool is_already_in_neighbor( std::vector<Routes> neighbors, Routes candi ){
     return false;
 }
 
-bool is_enough_space_in_vehicle( Route route )
+bool is_enough_space_in_vehicle( Route route ) //sprawdza czy suma zapotrzebowania dla danej trasy jest mniejsza badz rowna ładownosci dla danego samochodu 
 {
     int current_load = 0;
-    for( auto& city : route )
-        current_load += city.m_demand_capacity;
 
-    return current_load <= max_vehicle_capacity;
+    for( auto& city : route )
+        current_load += city.m_demand_capacity; // suma zapotrzebowania dla danej trasy
+
+    return current_load <= max_vehicle_capacity; 
 }
 
-bool is_enough_space_in_vehicles( Routes routes )
+bool is_enough_space_in_vehicles( Routes routes ) // sprawdza czy wygenerowany zestaw tras spełnia warunek ładownosci 
 {
     for( auto& route : routes )
     {
@@ -263,14 +264,16 @@ bool is_enough_space_in_vehicles( Routes routes )
     return true;
 }
 
-std::vector<Routes> get_neighbors( Routes routes ){
+std::vector<Routes> get_neighbors( Routes routes ){ //funkcja tworzaca sąsiada - nasze roziwazanie, zmiany miast pomiedzy drogami - liczba zmian max 3 min 1 przechodza tylko te, ktore spełniaja warunek pojemnosci
 
     std::vector<Routes> neighbors;
     int number_actually_needed_neighbors =  NUMBER_OF_NEIGHBORS;
+
     for(int i=0; i < number_actually_needed_neighbors; i++){
-        Routes new_neighbor = create_neighbor(routes);
         int shuffle_times = std::rand() % 3;
-        while( !is_enough_space_in_vehicles( new_neighbor ) )
+
+        Routes new_neighbor = create_neighbor(routes);
+        while( !is_enough_space_in_vehicles( new_neighbor ) ) //jesli nowy sasaid nie spełnai arunku pojemnosci, tworzy nowego sasiada
         {
             new_neighbor = create_neighbor( routes );
             for(int i = 0; i < shuffle_times; ++i )
@@ -290,40 +293,40 @@ void remove_first_routes_from_tabu_list(){
     std::reverse(std::begin(cvrp_tabu_list), std::end(cvrp_tabu_list));
 }
 
-Routes build_init_solution()
+Routes build_init_solution() //buduje początkowe rozwiązanie - pierwsze trasy w zalezności od ilości samochodów
 {
     CVRP::counter = 0;
-    Routes solution( numb_of_vehicles, Route(1, cities[0]) );
-    for( auto& route : solution)
+    Routes solution( numb_of_vehicles, Route(1, cities[0]) ); // buduje puste drogi i daje kazdej Kraków na poczatku
+    for( auto& route : solution) // pętla która tworzy rozwiazanie początkowe
     {
         int current_load = max_vehicle_capacity;
         while( current_load > 0 )
         {
-            auto it_new_city = std::find_if( std::next( std::begin( cities ) ),
+            auto it_new_city = std::find_if( std::next( std::begin( cities ) ), //szukanie miasta do trasy
                                              std::end( cities ),
                                              [current_load]( City & c ){
                                                  return *(c.m_visit_counter) == 0 &&
                                                         c.m_demand_capacity < current_load;
                                              });
 
-            if( it_new_city != std::end( cities ) )
+            if( it_new_city != std::end( cities ) ) // sprawdzenie czy miasto zostało znalezione - jesli nie znaleziono to wskazuje na end.
             {
                 (*(it_new_city->m_visit_counter))++;
                 current_load -= it_new_city->m_demand_capacity;
                 route.push_back( *it_new_city );
             }
             else
-                break;
+                break; // jesli nie znaleziono to konczymy tworzenie aktualnej drogi
         }
     }
 
-    std::random_device rd;
-    std::mt19937 g(rd());
+    std::random_device rd; 
+    std::mt19937 g(rd()); 
     for( auto& route : solution)
-        std::shuffle(std::next(route.begin()), route.end(), g);
+        std::shuffle(std::next(route.begin()), route.end(), g); // mieszanie wewnętrzne kazej trasy 
 
     for( auto& route : solution)
-        route.push_back( cities[0] );
+        route.push_back( cities[0] ); // dodaje Krakow jako ostatni element trasy
 
     return solution;
 }
@@ -337,9 +340,9 @@ bool is_in_tabu_list( Routes routes ){
     return false;
 }
 
-Routes find_best_candidate( std::vector<Routes> neighbors ){
+Routes find_best_candidate( std::vector<Routes> neighbors ){ //funkcja znajdujaca nalepszego sąsiada
 
-    Routes best_candidate = neighbors[0];
+    Routes best_candidate = neighbors[0]; // przypisanie do zmiennej tymczasowej pierwszego sasiada
 
     for (int i = 0; i < neighbors.size(); i++){
         if( !is_in_tabu_list( neighbors[i] ) && fitness( neighbors[i] ) <= fitness( best_candidate ) ){
@@ -349,19 +352,20 @@ Routes find_best_candidate( std::vector<Routes> neighbors ){
     return best_candidate;
 }
 
-double fitness(Routes routes){
+double fitness(Routes routes){ //funkcja sprawdzajaca dlugosc trasy jednego rozwiazania - wszystkich samochodów 
     double routes_length = 0;
     for( Route& route : routes )
         routes_length += TSP::fitness( route );
     return routes_length;
 }
 
-bool stopping_condition( Routes& sBest, Routes& prevSBest, int threshold ){
-    display(sBest);
+bool stopping_condition( Routes& sBest, Routes& prevSBest, int threshold ){ 
+    // display(sBest);
     if( is_near_enough_to(fitness(sBest), fitness(prevSBest), 1 ) )
         counter++;
     else
     {   
+        display(sBest);
         prevSBest = sBest;
         counter = 0;
     }
@@ -375,10 +379,10 @@ Routes tabu_search( Routes s0 ){
     Routes bestCandidate {s0};
     cvrp_tabu_list = {};
     cvrp_tabu_list.push_back(s0);
-    Routes prevSBest{ sBest };
+    Routes prevSBest{ sBest }; //potrzebne do waunku stopu
 
-    while( stopping_condition( sBest, prevSBest, 50000 ) ){
-        std::vector<Routes> neighbors = get_neighbors(bestCandidate);
+    while( stopping_condition( sBest, prevSBest, cvrp_max_same_iterations_result ) ){
+        std::vector<Routes> neighbors = get_neighbors(bestCandidate); // wektor zbioru drog 
         bestCandidate = find_best_candidate(neighbors);
 
         if( fitness(bestCandidate) < fitness(sBest) ){
@@ -399,16 +403,18 @@ Routes tabu_search( Routes s0 ){
 int main() 
 {
     std::srand(time(0));
-    auto solution = CVRP::build_init_solution();
+    Routes solution = CVRP::build_init_solution(); //buduje początkowe rozwiązanie - pierwsze trasy w zalezności od ilości samochodów
 
+//   draw_solution( solution, 25 );
     auto start = std::chrono::high_resolution_clock::now(); 
-    solution = CVRP::tabu_search( solution );
+    solution = CVRP::tabu_search( solution ); // wykorzystanie algorytmu tabu search do znalezenia możliwie optymalnego rozwiaząnia 
     auto stop = std::chrono::high_resolution_clock::now(); 
   
     std::cout << "Time taken by cvrp_tabu_search: "
-         << std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() << " microseconds" << std::endl; 
+         << std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() / 1000000 << " seconds" << std::endl; 
 
-    for( auto& route : solution )
+   
+    for( auto& route : solution )  //wykorzystanie algorytmu tsp tabu search dla poprawienia każdej drogi z osobana z ostatcznego rozwiązania
     {
         TSP::counter = 0;
         route = TSP::tabu_search( route );

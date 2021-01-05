@@ -10,8 +10,10 @@
 #include <thread>
 #include <tuple>
 #include <random>
+
 #include <vector>
 #include <matplot/matplot.h>
+
 #include <chrono>
 #include <thread>
 
@@ -21,6 +23,8 @@ const double geo_degree_in_km = 111.1;
 const int numb_of_vehicles = 5;
 const int max_vehicle_capacity = 1000;
 const int max_tabu_size = 10;
+const int cvrp_max_same_iterations_result = 10000;
+const int tsp_max_same_iterations_result = 10000;
 //typ dla miasta szerokosc/długosc geo
 struct Coordinate{
     double width;
@@ -36,10 +40,12 @@ struct City{
 
 using Route = std::vector<City>;
 using Routes = std::vector<Route>;
+
 namespace TSP{
     using Tabu = Routes;
     int counter{0};
 };
+
 namespace CVRP{
     using Tabu = std::vector<Routes>;
     using Route_City = std::pair<int,int>;
@@ -98,7 +104,7 @@ namespace CVRP{
     Routes find_best_candidate(std::vector<Routes> neighbors);
     bool is_in_tabu_list(Routes routes);
     void remove_first_routes_from_tabu_list();
-    std::pair<Route_City, Route_City> generate_routes_with_swapped_cities(Routes routes);
+    std::pair<Route_City, Route_City> generate_indexes_for_city_swapping(Routes routes);
 };
 
 namespace TSP{
