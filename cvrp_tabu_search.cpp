@@ -83,6 +83,14 @@ bool are_routes_equal( Routes first_routes, Routes second_routes ){ //porowanie 
     return true;
 }
 
+template<typename T>
+void pop_first( T vector )
+{
+    std::reverse(std::begin(vector), std::end(vector));
+    vector.pop_back();
+    std::reverse(std::begin(vector), std::end(vector));
+}
+
 namespace TSP{
 
 std::pair<int,int> generate_cities_to_swap(Route route){
@@ -152,13 +160,6 @@ Route find_best_candidate(Routes neighbors){
     return best_candidate;
 }
 
-void remove_first_route_from_tabu_list(){
-    std::reverse(std::begin(tsp_tabu_list), std::end(tsp_tabu_list));
-    tsp_tabu_list.pop_back();
-    std::reverse(std::begin(tsp_tabu_list), std::end(tsp_tabu_list));
-}
-
-
 bool stopping_condition( Route& sBest, Route& prevSBest, int threshold ){
     if( is_near_enough_to(fitness(sBest), fitness(prevSBest), 1 ) )
         counter++;
@@ -197,7 +198,7 @@ Route tabu_search( Route s0 ){
         tsp_tabu_list.push_back(bestCandidate);
 
         if(tsp_tabu_list.size() > max_tabu_size){
-            remove_first_route_from_tabu_list();
+            pop_first(tsp_tabu_list);
         }
     }
 
@@ -287,11 +288,6 @@ std::vector<Routes> get_neighbors( Routes routes ){ //funkcja tworzaca sąsiada 
     return neighbors;
 }
 
-void remove_first_routes_from_tabu_list(){
-    std::reverse(std::begin(cvrp_tabu_list), std::end(cvrp_tabu_list));
-    cvrp_tabu_list.pop_back();
-    std::reverse(std::begin(cvrp_tabu_list), std::end(cvrp_tabu_list));
-}
 
 Routes build_init_solution() //buduje początkowe rozwiązanie - pierwsze trasy w zalezności od ilości samochodów
 {
@@ -391,7 +387,7 @@ Routes tabu_search( Routes s0 ){
         cvrp_tabu_list.push_back( bestCandidate );
 
         if( cvrp_tabu_list.size() > max_tabu_size ){
-            remove_first_routes_from_tabu_list();
+            pop_first(cvrp_tabu_list);
         }
     }
     return sBest;

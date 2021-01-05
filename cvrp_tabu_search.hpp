@@ -97,13 +97,15 @@ void display(Route route);
 bool are_route_equal(Route first_route, Route second_route);
 void swap_cities(City& first, City& second);
 
+template<typename T>
+void pop_first( T vector );
+
 namespace CVRP{
     Routes build_init_solution();
     Routes tabu_search( Routes s0 );
     double fitness(Routes routes);
     Routes find_best_candidate(std::vector<Routes> neighbors);
     bool is_in_tabu_list(Routes routes);
-    void remove_first_routes_from_tabu_list();
     std::pair<Route_City, Route_City> generate_indexes_for_city_swapping(Routes routes);
 };
 
@@ -113,7 +115,6 @@ namespace TSP{
     Routes get_neighbors(Route route);
     Route find_best_candidate(Routes neighbors);
     double fitness(Route route);
-    void remove_first_route_from_tabu_list();
     bool is_already_in_neighbor(Routes neighbors, Route candi );
     bool is_in_tabu_list(Route route);
     bool stopping_condition( Route& sBest, Route& prevSBest, int threshold );
