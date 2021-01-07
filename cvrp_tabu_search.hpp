@@ -17,14 +17,16 @@
 #include <chrono>
 #include <thread>
 
+#define ERROR_NUMBER -1
 #define NUMBER_OF_NEIGHBORS 20
 //potrzeba dokładnych danych
 const double geo_degree_in_km = 111.1; 
 const int numb_of_vehicles = 5;
 const int max_vehicle_capacity = 1000;
-const int max_tabu_size = 10;
-const int cvrp_max_same_iterations_result = 10000;
+const int max_tabu_size = 15;
+const int cvrp_max_same_iterations_result = 50000;
 const int tsp_max_same_iterations_result = 10000;
+const int error_threshold = 25;
 //typ dla miasta szerokosc/długosc geo
 struct Coordinate{
     double width;
@@ -94,18 +96,29 @@ bool is_near_enough_to(double suspect, double center, double measurement_error =
 void distance_for_two_cities();
 void draw_solution(Routes solution);
 void display(Route route);
+void display(Routes routes);
 bool are_route_equal(Route first_route, Route second_route);
 void swap_cities(City& first, City& second);
 
 template<typename T>
-void pop_first( T vector );
+void pop_first( T& vector );
 
 namespace CVRP{
-    Routes build_init_solution();
-    Routes tabu_search( Routes s0 );
-    double fitness(Routes routes);
+    std::pair<Route_City, Route_City> generate_indexes_for_city_swapping( Routes routes );
+    Routes create_neighbor( Routes routes );
+    std::vector<Routes> get_neighbors( Routes routes );
     Routes find_best_candidate(std::vector<Routes> neighbors);
+    double fitness(Routes routes);
+    bool is_already_in_neighbor( std::vector<Routes> neighbors, Routes candi );
     bool is_in_tabu_list(Routes routes);
+    bool stopping_condition( Routes& sBest, Routes& prevSBest, int threshold );
+    Routes tabu_search( Routes s0 );
+    
+    bool is_enough_space_in_vehicle( Route route );
+    bool is_enough_space_in_vehicles( Routes routes );
+    City cut_random_city( std::vector<City>& clients_cities );
+    int get_index_of_route_with_enough_capacity( Routes routes, int city_capacity_demand );
+    Routes build_init_solution( std::vector<City> clients_cities );
     std::pair<Route_City, Route_City> generate_indexes_for_city_swapping(Routes routes);
 };
 
