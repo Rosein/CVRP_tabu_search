@@ -378,7 +378,9 @@ double fitness(Routes routes){ //funkcja sprawdzajaca dlugosc trasy jednego rozw
 bool stopping_condition( Routes& sBest, Routes& prevSBest, int threshold ){ 
     // display(sBest);
     if( is_near_enough_to(fitness(sBest), fitness(prevSBest), 1 ) )
+    {
         CVRP::counter++;
+    }
     else
     {   
         display(sBest);
