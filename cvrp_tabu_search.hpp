@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+#include <iterator>
 #include <thread>
 #include <tuple>
 #include <random>
@@ -23,9 +24,13 @@ const double geo_degree_in_km = 111.1;
 const int numb_of_vehicles = 5;
 const int max_vehicle_capacity = 1000;
 const int max_tabu_size = 15;
-const int cvrp_max_same_iterations_result = 50000;
+const int cvrp_max_same_iterations_result = 100000;
 const int tsp_max_same_iterations_result = 10000;
-const int error_threshold = 25;
+const int error_threshold = 125;
+const int break_threshold = 25;
+const int min_size_of_route = 4;
+
+
 //typ dla miasta szerokosc/długosc geo
 struct Coordinate{
     double width;
@@ -103,7 +108,7 @@ void pop_first( T& vector );
 
 namespace CVRP{
     std::pair<Route_City, Route_City> generate_indexes_for_city_swapping( Routes routes );
-    Routes create_neighbor( Routes routes );
+    Routes create_neighbor_by_swapping( Routes routes );
     std::vector<Routes> get_neighbors( Routes routes );
     Routes find_best_candidate(std::vector<Routes> neighbors);
     double fitness(Routes routes);
@@ -112,7 +117,8 @@ namespace CVRP{
     bool stopping_condition( Routes& sBest, Routes& prevSBest, int threshold );
     Routes tabu_search( Routes s0 );
     
-    bool is_enough_space_in_vehicle( Route route );
+    Routes createRoutesWithoutOneCity( Routes routes, std::pair<int,int> xy_city );
+    bool is_enough_space_in_vehicle( Route route, int extra_load = 0 );
     bool is_enough_space_in_vehicles( Routes routes );
     City cut_random_city( std::vector<City>& clients_cities );
     int get_index_of_route_with_enough_capacity( Routes routes, int city_capacity_demand );

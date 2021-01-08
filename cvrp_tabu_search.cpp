@@ -217,32 +217,86 @@ Route tabu_search( Route s0 ){
 
 namespace CVRP {
 
+int getDiffrentRandomIndex( int first_index, int container_size )
+{
+    int second_index = std::rand() % ( container_size );
+    while( first_index == second_index ){
+        second_index = std::rand() % ( container_size );
+    }
+    return second_index;
+}
+
+std::pair<int,int> getTwoRandomIdexes( int container_size )
+{
+    int first_index = std::rand() % ( container_size );
+    return { first_index, getDiffrentRandomIndex( first_index, container_size ) };
+}
+
+int getRandomIndexCityFromInsideOfRoad( int route_size )
+{
+    const int FIRST_CITY = 1;
+    const int LAST_CITY = 2;
+    return FIRST_CITY + std::rand() % ( route_size - LAST_CITY );
+}
+
+int getRandomIndexOfRouteWithEnoughCapacity( Routes& routes, std::pair<int,int> xy_city )
+{
+    // std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
+
+    int new_route_index;
+
+    do{
+        new_route_index = getDiffrentRandomIndex( xy_city.first, routes.size() );
+         
+    }
+    while( !is_enough_space_in_vehicle( routes[new_route_index], routes[ xy_city.first ][ xy_city.second ].m_demand_capacity ) );
+
+    return new_route_index;
+}
+
 std::pair<Route_City, Route_City> generate_indexes_for_city_swapping(Routes routes){
 
     if( routes.size() == 1 )
         throw std::logic_error( "Too few routes." );
 
-    int first_route = std::rand() % ( routes.size() );
-    int second_route = std::rand() % ( routes.size() );
-    while( first_route == second_route ){
-        second_route = std::rand() % ( routes.size() );
-    }
+    std::pair<int,int> route = getTwoRandomIdexes( routes.size() );
 
-    const int FIRST_CITY = 1;
-    const int LAST_CITY = 2;
+    int first_city = getRandomIndexCityFromInsideOfRoad( routes[ route.first ].size() );
+    int second_city = getRandomIndexCityFromInsideOfRoad( routes[ route.second ].size() );
 
-    int first_city = FIRST_CITY + std::rand() % ( routes[ first_route ].size() - LAST_CITY );
-    int second_city = FIRST_CITY + std::rand() % ( routes[ second_route ].size() - LAST_CITY );
-
-    return { { first_route, first_city }, { second_route, second_city} };
+    return { { route.first, first_city }, { route.second, second_city} };
 }
 
-Routes create_neighbor( Routes routes ){ // funkcja tworzy nowego sąsiada
+Routes create_neighbor_by_swapping( Routes routes ){ // funkcja tworzy nowego sąsiada
     Routes new_route(routes); //kopiuje na początku wszystkie trasy
     std::pair<Route_City,Route_City> cities_to_swap = generate_indexes_for_city_swapping(routes);
     swap_cities(new_route[ cities_to_swap.first.first  ] [ cities_to_swap.first.second ], 
                 new_route[ cities_to_swap.second.first ] [ cities_to_swap.second.second ] ); // w nowej drodze zamienia miasta
     return new_route;
+}
+
+Routes createRoutesWithoutOneCity( Routes routes, std::pair<int,int> xy_city )
+{
+    Routes routes_with_delated_city( routes );
+    auto it_city_to_move = std::next( std::begin(routes_with_delated_city[xy_city.first]), xy_city.second );
+    routes_with_delated_city[xy_city.first].erase( it_city_to_move );
+    return routes_with_delated_city;
+}
+
+std::vector<Routes> create_neighbors_by_move_one_city( Routes & routes, 
+                                                       std::pair<int,int> xy_city, 
+                                                       int index_destination_route ){
+    const int FIRST_CITY = 1;
+    
+    Routes routes_with_delated_city =  createRoutesWithoutOneCity( routes, xy_city );
+    City moving_city = routes[xy_city.first][xy_city.second];
+    std::vector<Routes> new_neighbors( routes[ index_destination_route ].size() - FIRST_CITY, routes_with_delated_city );
+    for( int i = 0; i < new_neighbors.size(); i++ )
+    {
+        auto place_to_insert = std::next( std::begin( new_neighbors[ i ][ index_destination_route ] ), i + 1 );
+        new_neighbors[ i ][ index_destination_route ].insert( place_to_insert, moving_city );
+    }
+    return new_neighbors;
 }
 
 bool is_already_in_neighbor( std::vector<Routes> neighbors, Routes candi ){
@@ -253,9 +307,9 @@ bool is_already_in_neighbor( std::vector<Routes> neighbors, Routes candi ){
     return false;
 }
 
-bool is_enough_space_in_vehicle( Route route ) //sprawdza czy suma zapotrzebowania dla danej trasy jest mniejsza badz rowna ładownosci dla danego samochodu 
+bool is_enough_space_in_vehicle( Route route, int extra_load ) //sprawdza czy suma zapotrzebowania dla danej trasy jest mniejsza badz rowna ładownosci dla danego samochodu 
 {
-    int current_load = 0;
+    int current_load = extra_load;
 
     for( auto& city : route )
         current_load += city.m_demand_capacity; // suma zapotrzebowania dla danej trasy
@@ -273,19 +327,18 @@ bool is_enough_space_in_vehicles( Routes routes ) // sprawdza czy wygenerowany z
     return true;
 }
 
-std::vector<Routes> get_neighbors( Routes routes ){ //funkcja tworzaca sąsiada - nasze roziwazanie, zmiany miast pomiedzy drogami - liczba zmian max 3 min 1 przechodza tylko te, ktore spełniaja warunek pojemnosci
-
-    std::vector<Routes> neighbors;
+void add_swapped_neighbors( Routes& routes, std::vector<Routes>& neighbors )
+{
     int number_actually_needed_neighbors =  NUMBER_OF_NEIGHBORS;
-
     for(int i=0; i < number_actually_needed_neighbors; i++){
         int shuffle_times = std::rand() % 3;
-        Routes new_neighbor = create_neighbor(routes);
+        Routes new_neighbor = create_neighbor_by_swapping(routes);
         while( !is_enough_space_in_vehicles( new_neighbor ) ) //jesli nowy sasaid nie spełnai arunku pojemnosci, tworzy nowego sasiada
         {
-            new_neighbor = create_neighbor( routes );
+            // std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
+            new_neighbor = create_neighbor_by_swapping( routes );
             for(int i = 0; i < shuffle_times; ++i ){
-                new_neighbor = create_neighbor( new_neighbor );
+                new_neighbor = create_neighbor_by_swapping( new_neighbor );
             }
         }
         if( !is_already_in_neighbor( neighbors, new_neighbor ) )
@@ -293,6 +346,53 @@ std::vector<Routes> get_neighbors( Routes routes ){ //funkcja tworzaca sąsiada 
         else
             --i;
     }
+}
+
+bool weCanAddCityToAnyOtherRoute( Routes& routes, std::pair<int,int> xy_city )
+{
+
+    for( int i = 0; i < routes.size(); i++ )
+    {
+        if( i != xy_city.first &&
+            is_enough_space_in_vehicle( routes[i], routes[ xy_city.first ][ xy_city.second ].m_demand_capacity ) )
+        return true;
+    }
+    return false;
+}
+
+void add_moved_one_city_neighbors( Routes& routes, std::vector<Routes>& neighbors )
+{
+    std::pair<int,int> xy_city_to_moved;
+    int break_counter = 0;
+    do {
+        if( break_counter++ == break_threshold )
+            return;
+        
+        int first_route_index = std::rand() % ( routes.size() );
+        while( routes[ first_route_index ].size() < min_size_of_route )
+            first_route_index = std::rand() % ( routes.size() );
+
+        int index_random_city = getRandomIndexCityFromInsideOfRoad( routes[ first_route_index ].size() ) ;
+        xy_city_to_moved = { first_route_index, index_random_city };
+
+    } 
+    while( !weCanAddCityToAnyOtherRoute( routes, xy_city_to_moved ) );
+
+    int index_destination_route = getRandomIndexOfRouteWithEnoughCapacity( routes, 
+                                                                            xy_city_to_moved );
+    std::vector<Routes> new_neighbors = create_neighbors_by_move_one_city( routes, 
+                                                                            xy_city_to_moved, 
+                                                                            index_destination_route);
+    for( Routes& new_neighbor : new_neighbors )
+            neighbors.push_back( new_neighbor );
+}
+
+
+std::vector<Routes> get_neighbors( Routes routes ){ //funkcja tworzaca sąsiada - nasze roziwazanie, zmiany miast pomiedzy drogami - liczba zmian max 3 min 1 przechodza tylko te, ktore spełniaja warunek pojemnosci
+    std::vector<Routes> neighbors{};
+    neighbors.reserve( 3 * NUMBER_OF_NEIGHBORS );
+    add_swapped_neighbors( routes, neighbors );
+    add_moved_one_city_neighbors( routes, neighbors );
     return neighbors;
 }
 
@@ -398,7 +498,6 @@ Routes tabu_search( Routes s0 ){
     cvrp_tabu_list = {};
     cvrp_tabu_list.push_back(s0);
     Routes prevSBest{ sBest }; //potrzebne do waunku stopu
-
     while( stopping_condition( sBest, prevSBest, cvrp_max_same_iterations_result ) ){
         std::vector<Routes> neighbors = get_neighbors(bestCandidate); // wektor zbioru drog 
         bestCandidate = find_best_candidate(neighbors);
